@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>국어 학습 기록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header-content p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .add-post-section {
+            margin-bottom: 30px;
+            text-align: right;
+        }
+
+        .add-post-btn {
+            background: white;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 25px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            font-size: 1em;
+        }
+
+        .add-post-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .post-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .post-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .post-date {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .post-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .post-content {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .edit-btn, .delete-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #5568d3;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a52;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 2em;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .image-upload-area {
+            border: 3px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-area:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .image-upload-area input[type="file"] {
+            display: none;
+        }
+
+        .preview-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-image-container {
+            position: relative;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            min-height: 50px;
+        }
+
+        .tags-input input {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+            font-size: 1em;
+        }
+
+        .tag-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .empty-state h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        .empty-state p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* 이미지 확대 모달 */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            cursor: pointer;
+        }
+
+        .image-modal img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .header-content h1 {
+                font-size: 1.8em;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 20px;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>📝 국어 학습 기록</h1>
+                <p>국어 과목의 학습 내용을 기록합니다</p>
+            </div>
+            <a href="index.html" class="back-button">← 돌아가기</a>
+        </header>
+
+        <div class="add-post-section">
+            <button class="add-post-btn" onclick="openModal()">✏️ 새 기록 작성</button>
+        </div>
+
+        <div id="postsGrid" class="posts-grid">
+            <!-- 게시물들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>📚</h2>
+            <h2>아직 기록이 없습니다</h2>
+            <p>첫 번째 학습 기록을 작성해보세요!</p>
+        </div>
+    </div>
+
+    <!-- 게시물 작성/수정 모달 -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">새 기록 작성</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="postForm" onsubmit="savePost(event)">
+                <div class="form-group">
+                    <label for="postTitle">제목</label>
+                    <input type="text" id="postTitle" required placeholder="학습 내용의 제목을 입력하세요">
+                </div>
+
+                <div class="form-group">
+                    <label for="postContent">내용</label>
+                    <textarea id="postContent" required placeholder="학습한 내용을 자세히 기록하세요"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>이미지 추가 (최대 5개)</label>
+                    <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                        <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)">
+                        <p>📷 클릭하여 이미지 추가</p>
+                        <p style="font-size: 0.9em; color: #999; margin-top: 10px;">또는 이미지를 여기에 드래그하세요</p>
+                    </div>
+                    <div id="previewImages" class="preview-images"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>태그</label>
+                    <div class="tags-input" id="tagsInput" onclick="document.getElementById('tagInput').focus()">
+                        <input type="text" id="tagInput" placeholder="태그 입력 후 Enter" onkeypress="handleTagInput(event)">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">저장하기</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 이미지 확대 모달 -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="확대 이미지">
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let posts = [];
+        let currentEditId = null;
+        let currentImages = [];
+        let currentTags = [];
+
+        // 페이지 로드 시 저장된 게시물 불러오기
+        window.onload = function() {
+            loadPosts();
+            displayPosts();
+        };
+
+        // 로컬 스토리지에서 게시물 불러오기
+        function loadPosts() {
+            const savedPosts = localStorage.getItem('koreanPosts');
+            if (savedPosts) {
+                posts = JSON.parse(savedPosts);
+            }
+        }
+
+        // 로컬 스토리지에 게시물 저장
+        function savePosts() {
+            localStorage.setItem('koreanPosts', JSON.stringify(posts));
+        }
+
+        // 게시물 표시
+        function displayPosts() {
+            const postsGrid = document.getElementById('postsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (posts.length === 0) {
+                postsGrid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            postsGrid.innerHTML = '';
+
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+                
+                let imagesHtml = '';
+                if (post.images && post.images.length > 0) {
+                    imagesHtml = '<div class="post-images">';
+                    post.images.forEach(img => {
+                        imagesHtml += `<img src="${img}" class="post-image" onclick="openImageModal('${img}')" alt="게시물 이미지">`;
+                    });
+                    imagesHtml += '</div>';
+                }
+
+                let tagsHtml = '';
+                if (post.tags && post.tags.length > 0) {
+                    tagsHtml = '<div class="post-tags">';
+                    post.tags.forEach(tag => {
+                        tagsHtml += `<span class="tag">${tag}</span>`;
+                    });
+                    tagsHtml += '</div>';
+                }
+
+                postCard.innerHTML = `
+                    <div class="post-card-header">
+                        <div class="post-title">${post.title}</div>
+                        <div class="post-date">${post.date}</div>
+                    </div>
+                    ${imagesHtml}
+                    <div class="post-content">${post.content}</div>
+                    ${tagsHtml}
+                    <div class="post-actions">
+                        <button class="edit-btn" onclick="editPost('${post.id}')">수정</button>
+                        <button class="delete-btn" onclick="deletePost('${post.id}')">삭제</button>
+                    </div>
+                `;
+
+                postsGrid.appendChild(postCard);
+            });
+        }
+
+        // 모달 열기
+        function openModal() {
+            document.getElementById('postModal').style.display = 'block';
+            document.getElementById('modalTitle').textContent = '새 기록 작성';
+            currentEditId = null;
+            resetForm();
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+            resetForm();
+        }
+
+        // 폼 리셋
+        function resetForm() {
+            document.getElementById('postForm').reset();
+            document.getElementById('previewImages').innerHTML = '';
+            document.getElementById('tagsInput').innerHTML = '<input type="text" id="tagInput" placeholder="태그 입력 후 Enter" onkeypress="handleTagInput(event)">';
+            currentImages = [];
+            currentTags = [];
+        }
+
+        // 이미지 업로드 처리
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            
+            if (currentImages.length + files.length > 5) {
+                alert('이미지는 최대 5개까지 업로드할 수 있습니다.');
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImages.push(e.target.result);
+                    displayPreviewImages();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 미리보기 이미지 표시
+        function displayPreviewImages() {
+            const previewContainer = document.getElementById('previewImages');
+            previewContainer.innerHTML = '';
+
+            currentImages.forEach((img, index) => {
+                const container = document.createElement('div');
+                container.className = 'preview-image-container';
+                container.innerHTML = `
+                    <img src="${img}" class="preview-image" alt="미리보기">
+                    <button class="remove-image" onclick="removeImage(${index})">×</button>
+                `;
+                previewContainer.appendChild(container);
+            });
+        }
+
+        // 이미지 제거
+        function removeImage(index) {
+            currentImages.splice(index, 1);
+            displayPreviewImages();
+        }
+
+        // 태그 입력 처리
+        function handleTagInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const tag = input.value.trim();
+                
+                if (tag && !currentTags.includes(tag)) {
+                    currentTags.push(tag);
+                    displayTags();
+                    input.value = '';
+                }
+            }
+        }
+
+        // 태그 표시
+        function displayTags() {
+            const tagsContainer = document.getElementById('tagsInput');
+            tagsContainer.innerHTML = '';
+
+            currentTags.forEach((tag, index) => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag-item';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag(${index})">×</span>
+                `;
+                tagsContainer.appendChild(tagElement);
+            });
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'tagInput';
+            input.placeholder = '태그 입력 후 Enter';
+            input.onkeypress = handleTagInput;
+            tagsContainer.appendChild(input);
+        }
+
+        // 태그 제거
+        function removeTag(index) {
+            currentTags.splice(index, 1);
+            displayTags();
+        }
+
+        // 게시물 저장
+        function savePost(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+
+            const post = {
+                id: currentEditId || Date.now().toString(),
+                title: title,
+                content: content,
+                images: [...currentImages],
+                tags: [...currentTags],
+                date: currentEditId ? posts.find(p => p.id === currentEditId).date : today
+            };
+
+            if (currentEditId) {
+                const index = posts.findIndex(p => p.id === currentEditId);
+                posts[index] = post;
+            } else {
+                posts.unshift(post);
+            }
+
+            savePosts();
+            displayPosts();
+            closeModal();
+        }
+
+        // 게시물 수정
+        function editPost(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '기록 수정';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postContent').value = post.content;
+            
+            currentImages = [...post.images];
+            currentTags = [...post.tags];
+            
+            displayPreviewImages();
+            displayTags();
+            
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        // 게시물 삭제
+        function deletePost(id) {
+            if (confirm('정말 이 기록을 삭제하시겠습니까?')) {
+                posts = posts.filter(p => p.id !== id);
+                savePosts();
+                displayPosts();
+            }
+        }
+
+        // 이미지 확대 모달
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('postModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
