@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국사 학습 기록</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 40px;
+          사 학습 기록</h1>
+                <p>한국사 과목의 학습 내용을 기록합니다</p>
+            </div>
+            <a href="index.html" class="back-button">← 돌아가기</a>
+        </header>
+
+        <div class="add-post-section">
+            <button class="add-post-btn" onclick="openModal()">✏️ 새 기록 작성</button>
+        </div>
+
+        <div id="postsGrid" class="posts-grid">
+            <!-- 게시물들이 여기에 동적으로 추가됩니다 -->
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>📚</h2>
+            <h2>아직 기록이 없습니다</h2>
+            <p>첫 번째 학습 기록을 작성해보세요!</p>
+        </div>
+    </div>
+
+    <!-- 게시물 작성/수정 모달 -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">새 기록 작성</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="postForm" onsubmit="savePost(event)">
+                <div class="form-group">
+                    <label for="postTitle">제목</label>
+                    <input type="text" id="postTitle" required placeholder="학습 내용의 제목을 입력하세요">
+                </div>
+
+                <div class="form-group">
+                    <label for="postContent">내용</label>
+                    <textarea id="postContent" required placeholder="학습한 내용을 자세히 기록하세요"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>이미지 추가 (최대 5개)</label>
+                    <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                        <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)">
+                        <p>📷 클릭하여 이미지 추가</p>
+                        <p style="font-size: 0.9em; color: #999; margin-top: 10px;">또는 이미지를 여기에 드래그하세요</p>
+                    </div>
+                    <div id="previewImages" class="preview-images"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>태그</label>
+                    <div class="tags-input" id="tagsInput" onclick="document.getElementById('tagInput').focus()">
+                        <input type="text" id="tagInput" placeholder="태그 입력 후 Enter" onkeypress="handleTagInput(event)">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">저장하기</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 이미지 확대 모달 -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <img id="modalImage" src="" alt="확대 이미지">
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let posts = [];
+        let currentEditId = null;
+        let currentImages = [];
+        let currentTags = [];
+
+        // 페이지 로드 시 저장된 게시물 불러오기
+        window.onload = function() {
+            loadPosts();
+            displayPosts();
+        };
+
+        // 로컬 스토리지에서 게시물 불러오기
+        function loadPosts() {
+            const savedPosts = localStorage.getItem('koreanPosts');
+            if (savedPosts) {
+                posts = JSON.parse(savedPosts);
+            }
+        }
+
+        // 로컬 스토리지에 게시물 저장
+        function savePosts() {
+            localStorage.setItem('koreanPosts', JSON.stringify(posts));
+        }
+
+        // 게시물 표시
+        function displayPosts() {
+            const postsGrid = document.getElementById('postsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (posts.length === 0) {
+                postsGrid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            postsGrid.innerHTML = '';
+
+            posts.forEach(post => {
+                const postCard = document.createElement('div');
+                postCard.className = 'post-card';
+                
+                let imagesHtml = '';
+                if (post.images && post.images.length > 0) {
+                    imagesHtml = '<div class="post-images">';
+                    post.images.forEach(img => {
+                        imagesHtml += `<img src="${img}" class="post-image" onclick="openImageModal('${img}')" alt="게시물 이미지">`;
+                    });
+                    imagesHtml += '</div>';
+                }
+
+                let tagsHtml = '';
+                if (post.tags && post.tags.length > 0) {
+                    tagsHtml = '<div class="post-tags">';
+                    post.tags.forEach(tag => {
+                        tagsHtml += `<span class="tag">${tag}</span>`;
+                    });
+                    tagsHtml += '</div>';
+                }
+
+                postCard.innerHTML = `
+                    <div class="post-card-header">
+                        <div class="post-title">${post.title}</div>
+                        <div class="post-date">${post.date}</div>
+                    </div>
+                    ${imagesHtml}
+                    <div class="post-content">${post.content}</div>
+                    ${tagsHtml}
+                    <div class="post-actions">
+                        <button class="edit-btn" onclick="editPost('${post.id}')">수정</button>
+                        <button class="delete-btn" onclick="deletePost('${post.id}')">삭제</button>
+                    </div>
+                `;
+
+                postsGrid.appendChild(postCard);
+            });
+        }
+
+        // 모달 열기
+        function openModal() {
+            document.getElementById('postModal').style.display = 'block';
+            document.getElementById('modalTitle').textContent = '새 기록 작성';
+            currentEditId = null;
+            resetForm();
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('postModal').style.display = 'none';
+            resetForm();
+        }
+
+        // 폼 리셋
+        function resetForm() {
+            document.getElementById('postForm').reset();
+            document.getElementById('previewImages').innerHTML = '';
+            document.getElementById('tagsInput').innerHTML = '<input type="text" id="tagInput" placeholder="태그 입력 후 Enter" onkeypress="handleTagInput(event)">';
+            currentImages = [];
+            currentTags = [];
+        }
+
+        // 이미지 업로드 처리
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            
+            if (currentImages.length + files.length > 5) {
+                alert('이미지는 최대 5개까지 업로드할 수 있습니다.');
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImages.push(e.target.result);
+                    displayPreviewImages();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 미리보기 이미지 표시
+        function displayPreviewImages() {
+            const previewContainer = document.getElementById('previewImages');
+            previewContainer.innerHTML = '';
+
+            currentImages.forEach((img, index) => {
+                const container = document.createElement('div');
+                container.className = 'preview-image-container';
+                container.innerHTML = `
+                    <img src="${img}" class="preview-image" alt="미리보기">
+                    <button class="remove-image" onclick="removeImage(${index})">×</button>
+                `;
+                previewContainer.appendChild(container);
+            });
+        }
+
+        // 이미지 제거
+        function removeImage(index) {
+            currentImages.splice(index, 1);
+            displayPreviewImages();
+        }
+
+        // 태그 입력 처리
+        function handleTagInput(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const tag = input.value.trim();
+                
+                if (tag && !currentTags.includes(tag)) {
+                    currentTags.push(tag);
+                    displayTags();
+                    input.value = '';
+                }
+            }
+        }
+
+        // 태그 표시
+        function displayTags() {
+            const tagsContainer = document.getElementById('tagsInput');
+            tagsContainer.innerHTML = '';
+
+            currentTags.forEach((tag, index) => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag-item';
+                tagElement.innerHTML = `
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag(${index})">×</span>
+                `;
+                tagsContainer.appendChild(tagElement);
+            });
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'tagInput';
+            input.placeholder = '태그 입력 후 Enter';
+            input.onkeypress = handleTagInput;
+            tagsContainer.appendChild(input);
+        }
+
+        // 태그 제거
+        function removeTag(index) {
+            currentTags.splice(index, 1);
+            displayTags();
+        }
+
+        // 게시물 저장
+        function savePost(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const today = new Date().toISOString().split('T')[0].replace(/-/g, '.');
+
+            const post = {
+                id: currentEditId || Date.now().toString(),
+                title: title,
+                content: content,
+                images: [...currentImages],
+                tags: [...currentTags],
+                date: currentEditId ? posts.find(p => p.id === currentEditId).date : today
+            };
+
+            if (currentEditId) {
+                const index = posts.findIndex(p => p.id === currentEditId);
+                posts[index] = post;
+            } else {
+                posts.unshift(post);
+            }
+
+            savePosts();
+            displayPosts();
+            closeModal();
+        }
+
+        // 게시물 수정
+        function editPost(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '기록 수정';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postContent').value = post.content;
+            
+            currentImages = [...post.images];
+            currentTags = [...post.tags];
+            
+            displayPreviewImages();
+            displayTags();
+            
+            document.getElementById('postModal').style.display = 'block';
+        }
+
+        // 게시물 삭제
+        function deletePost(id) {
+            if (confirm('정말 이 기록을 삭제하시겠습니까?')) {
+                posts = posts.filter(p => p.id !== id);
+                savePosts();
+                displayPosts();
+            }
+        }
+
+        // 이미지 확대 모달
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            const modal = document.getElementById('postModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
